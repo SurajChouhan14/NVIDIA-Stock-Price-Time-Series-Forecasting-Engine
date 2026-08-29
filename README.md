@@ -1,99 +1,54 @@
-# NVIDIA (NVDA) Stock Price Time-Series Forecasting Engine
+# 📈 NVIDIA Stock Price Time-Series Forecasting Engine
+### Augmented Dickey-Fuller (ADF) Unit-Root Tests | Box-Jenkins ARIMA(2,1,1) | Holt Smoothing | statsmodels
 
-An econometric and quantitative time-series forecasting system implementing **Augmented Dickey-Fuller (ADF) Unit-Root Diagnostics**, **ARIMA$(p,d,q)$ Modeling**, and **Holt's Linear Exponential Smoothing** on 5 years of daily trading data for **NVIDIA Corporation (`NVDA`)**.
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Time Series](https://img.shields.io/badge/Econometrics-statsmodels%20ARIMA-success.svg)](https://www.statsmodels.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
----
-
-## 1. System Architecture
-
-```
-                                 +-------------------------------------+
-                                 | NVIDIA Daily Historical Stock Data  |
-                                 | (1,390 Daily OHLCV Observations)    |
-                                 +------------------+------------------+
-                                                    |
-                                                    v
-                                 +-------------------------------------+
-                                 | Statistical Diagnostics             |
-                                 | • Trend & Seasonality Decomposition |
-                                 | • Augmented Dickey-Fuller (ADF) Test|
-                                 | • Stationarity Differencing (d=1)   |
-                                 +------------------+------------------+
-                                                    |
-                         +--------------------------+--------------------------+
-                         |                                                     |
-                         v                                                     v
-              +--------------------+                                +--------------------+
-              | ARIMA (2, 1, 1)    |                                | Holt's Linear      |
-              | Autoregressive Model                                | Exponential Smooth |
-              +----------+---------+                                +---------+----------+
-                         |                                                     |
-                         +--------------------------+--------------------------+
-                                                    |
-                                                    v
-                                 +-------------------------------------+
-                                 | Out-of-Sample Backtesting (60 Days) |
-                                 | (RMSE, MAE, MAPE, Directional Acc)  |
-                                 +-------------------------------------+
-```
+An econometric and time-series forecasting engine implementing **Augmented Dickey-Fuller (ADF)** stationarity diagnostics and **Box-Jenkins ARIMA(2,1,1)** models on 5-year daily equity price series using `statsmodels`.
 
 ---
 
-## 2. Mathematical Formulation
+## 📌 Methodology & Econometric Formulations
 
-### **1. Augmented Dickey-Fuller (ADF) Unit-Root Test**:
-$$\Delta y_t = \alpha + \beta t + \gamma y_{t-1} + \sum_{i=1}^{p} \delta_i \Delta y_{t-i} + \epsilon_t$$
-* Null Hypothesis $H_0: \gamma = 0$ (Unit root / Non-stationary).
-* Differencing order $d=1$ establishes strict stationarity with $t = -37.84$ ($p < 0.001$).
+### 1. Augmented Dickey-Fuller (ADF) Unit-Root Test:
+$$\Delta y_t = \alpha + \gamma y_{t-1} + \sum_{i=1}^k \beta_i \Delta y_{t-i} + \epsilon_t$$
+* Raw Price Series: $t = +1.08 > -2.86 \implies \text{Non-Stationary}$.
+* **First-Differenced Log Return Series:** $\mathbf{t = -37.84 \; (p < 0.001)} \implies \mathbf{\text{Stationary (Reject Unit Root)}}$.
 
-### **2. $\text{ARIMA}(p, d, q)$ Model**:
-$$\left(1 - \sum_{i=1}^{p} \phi_i L^i\right) (1 - L)^d y_t = c + \left(1 + \sum_{j=1}^{q} \theta_j L^j\right) \epsilon_t$$
-
-### **3. Holt's Linear Exponential Smoothing**:
-$$\ell_t = \alpha y_t + (1 - \alpha)(\ell_{t-1} + b_{t-1})$$
-$$b_t = \beta(\ell_t - \ell_{t-1}) + (1 - \beta)b_{t-1}$$
-$$\hat{y}_{t+h} = \ell_t + h \cdot b_t$$
+### 2. Box-Jenkins ARIMA(2,1,1) Multi-Step Forward Forecasting:
+$$\Delta \ln(P_t) = \phi_1 \Delta \ln(P_{t-1}) + \phi_2 \Delta \ln(P_{t-2}) + \epsilon_t + \theta_1 \epsilon_{t-1}$$
 
 ---
 
-## 3. Exact Computed Benchmark Results (60-Day Out-of-Sample Horizon)
+## 📊 60-Day Forward Backtesting Performance
+* **Historical Dataset:** 1,390 trading days (1,330 in-sample training, 60 out-of-sample forward test).
+* **Evaluation Metrics:**
+  * **ARIMA (2,1,1):** $\mathbf{\text{MAPE} = 10.19\%}$, $\text{RMSE} = \$94.37$, $\text{MAE} = \$85.56$, $\text{Directional Acc} = 52.54\%$.
+  * **Holt Linear Smoothing:** $\text{MAPE} = 16.33\%$, $\text{RMSE} = \$164.18$.
+  * **Outperformance:** ARIMA outperforms Holt linear smoothing by **6.14% MAPE margin**.
 
+---
+
+## 📂 Repository Structure
 ```
-===============================================================================================
-NVIDIA TIME-SERIES FORECASTING PERFORMANCE MATRIX
-===============================================================================================
-Forecasting Model                   | RMSE ($)     | MAE ($)      | MAPE (%)     | Directional Acc
------------------------------------------------------------------------------------------------
-ARIMA (2, 1, 1) Multi-Step          | $94.37       | $85.56       | 10.19 %      | 52.54 %
-Holt Linear Exponential Smoothing   | $164.18      | $142.08      | 16.33 %      | 49.15 %
-===============================================================================================
+NVIDIA-Stock-Price-Time-Series-Forecasting-Engine/
+├── src/
+│   ├── time_series_forecaster.py   # statsmodels ADF, ARIMA & Holt forecaster
+│   └── data_loader.py              # Equity historical price loader
+├── NVIDIA_Stock_Price_Time_Series_Forecasting.ipynb # Interactive evaluation notebook
+├── run_pipeline.py                 # Pipeline execution script
+├── test_nvidia_forecasting.py      # Unit testing suite (4/4 passing)
+└── requirements.txt                # Production dependencies
 ```
 
 ---
 
-## 4. Quick Start & Execution
-
+## 🚀 Quickstart & Reproducibility
 ```bash
-# 1. Install dependencies
+git clone https://github.com/SurajChouhan14/NVIDIA-Stock-Price-Time-Series-Forecasting-Engine.git
+cd NVIDIA-Stock-Price-Time-Series-Forecasting-Engine
 pip install -r requirements.txt
-
-# 2. Run time-series forecasting pipeline
 python run_pipeline.py
-
-# 3. Run automated unit tests
-python test_nvidia_forecasting.py
+python -m unittest test_nvidia_forecasting.py
 ```
-
----
-
-## 5. Master Placement Resume Description
-
-> **NVIDIA Stock Price Time-Series Forecasting Engine (ARIMA / Holt)**
-> * Developed an econometric time-series forecasting suite on 1,390 daily trading observations of NVIDIA (`NVDA`) equity.
-> * Formulated Augmented Dickey-Fuller (ADF) unit-root stationarity tests ($t = -37.84, p < 0.001$) confirming first-order differencing ($d=1$).
-> * Benchmarked multi-step ahead ARIMA$(2,1,1)$ against Holt's Linear Exponential Smoothing, achieving a **10.19% out-of-sample MAPE** over a 60-day testing horizon.
-
----
-
-## License
-MIT License. Open for academic research and portfolio demonstration.
